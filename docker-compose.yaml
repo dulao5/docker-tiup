@@ -1,0 +1,15 @@
+version: 'version 3'
+networks:
+  test_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.10.0/24
+services:
+  bastion:
+    build: .
+    ports:
+      - "22:2022"
+    networks:
+      test_network:
+        ipv4_address: 10.10.10.10
