@@ -5,6 +5,7 @@ LABEL __copyright__="(C) Guido U. Draheim, licensed under the EUPL" \
 ARG PASSWORD=TiDB.P@ssw0rd
 EXPOSE 22
 
+# ssh server
 # RUN yum install -y epel-release
 RUN yum search sshd
 RUN yum install -y openssh-server
@@ -21,6 +22,14 @@ RUN yum install -y openssh-clients
 RUN rpm -q --list openssh-clients
 
 RUN echo "root:$PASSWORD" | chpasswd
+
+# for tiup packages
+RUN yum install -y sudo iproute
+
+# system config for tiup
+RUN echo 'fs.file-max=1000000' >> /etc/sysctl.d/99-sysctl.conf
+
+# tiup
 
 WORKDIR /root
 RUN curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
