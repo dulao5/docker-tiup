@@ -13,3 +13,18 @@ services:
     networks:
       test_network:
         ipv4_address: 10.10.10.10
+    ulimits:
+      nproc: 65535
+#      nofile:
+#        soft: 1000000
+#        hard: 1000000
+#      stack:
+#        soft: 10240
+#        hard: 10240
+    sysctls:
+      net.core.somaxconn: 65535
+      net.ipv4.tcp_syncookies: 0
+      # net.ipv4.tcp_tw_recycle: 0 : fixme : 廃止
+      # fs.file-max: 1000000 # todo : sysctl 'fs.file-max' is not whitelisted
+      # vm.swappiness: 0 # todo : sysctl 'vm.swappiness' is not whitelisted
+      # vm.overcommit_memory: 1 # todo : sysctl 'vm.overcommit_memory=1' is not whitelisted

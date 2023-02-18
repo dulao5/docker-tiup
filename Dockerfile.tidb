@@ -5,11 +5,6 @@ LABEL __copyright__="(C) Guido U. Draheim, licensed under the EUPL" \
 ARG PASSWORD=TiDB.P@ssw0rd
 EXPOSE 22
 
-#RUN yum install -y sysfsutils \
-# && echo 'kernel/mm/transparent_hugepage/enabled = never' >> /etc/sysfs.conf \
-# && echo 'kernel/mm/transparent_hugepage/defrag = never' >> /etc/sysfs.conf
-
-# ssh server
 # RUN yum install -y epel-release
 RUN yum search sshd
 RUN yum install -y openssh-server
@@ -22,23 +17,26 @@ RUN : \
 RUN systemctl enable sshd-keygen
 RUN systemctl enable sshd
 
-# ssh-keys
-COPY files/root_dot_ssh /root/.ssh
-
 RUN yum install -y openssh-clients
 RUN rpm -q --list openssh-clients
 
-RUN echo "root:$PASSWORD" | chpasswd
+RUN curl -o /usr/local/bin/gosu -sSL "https://github.com/tianon/gosu/releases/download/1.12/gosu-amd64" \
+        && chmod +x /usr/local/bin/gosu \
+        && gosu --version
 
-# for tiup packages
-RUN yum install -y sudo iproute
+# tidb user
 
-# tiup
+RUN useradd -m -s /bin/bash tidb
+RUN echo "tidb:$PASSWORD" | chpasswd
+RUN usermod -aG wheel tidb
+RUN echo "tidb ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-WORKDIR /root
-RUN curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
-ENV PATH=/root/.tiup/bin:$PATH
+USER tidb
+WORKDIR /home/tidb
+RUN curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh -x 2>&1 |tee /home/tidb/install.log
+ENV PATH=/home/tidb/.tiup/bin:$PATH
 
-COPY tiup-configs /root/tiup-configs
+COPY --chown=tidb:wheel tiup-configs /home/tidb/tiup-configs
+
 
 CMD ["/usr/bin/python", "/usr/bin/systemctl"]
